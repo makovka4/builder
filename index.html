@@ -275,6 +275,8 @@ eoyrdchf7G2r</textarea>
       <summary>Map coordinates <span class="sub">jail · break room · weapon boxes</span></summary>
       <label class="f">Infected (zombie) team number</label>
       <input type="text" id="infectedTeam" value="2">
+      <label class="f">Rev-nuke message <span class="q">— shown after the nuker's name. Plain text only (no — or ·, they render as junk in Krunker)</span></label>
+      <input type="text" id="revnukeMsg" value="tried to rev-nuke - jailed." placeholder="tried to rev-nuke - jailed.">
       <label class="f">Jail / revive box (X / Y / Z)</label>
       <div class="row3"><input id="revnukeX" value="510"><input id="revnukeY" value="320"><input id="revnukeZ" value="-457"></div>
       <label class="f">Break room box (X / Y / Z) <span class="q">— sealed cell: fake-admin trap + BREAK ROOM button</span></label>
@@ -366,7 +368,7 @@ function readCfg(){
     adminAcc:parseNames(val("adminAcc")), superAcc:parseNames(val("superAcc")), adminUser:parseNames(val("adminUser")),
     protectedAccounts:parseNames(val("protectedAcc")),
     banPatterns:parseNames(val("banPatterns")),
-    infectedTeam:val("infectedTeam"), revnukeX:val("revnukeX"), revnukeY:val("revnukeY"), revnukeZ:val("revnukeZ"),
+    infectedTeam:val("infectedTeam"), revnukeMsg:val("revnukeMsg"), revnukeX:val("revnukeX"), revnukeY:val("revnukeY"), revnukeZ:val("revnukeZ"),
     breakX:val("breakX"), breakY:val("breakY"), breakZ:val("breakZ"),
     wmX:val("wmX"), wmY:val("wmY"), wmZ:val("wmZ"), slX:val("slX"), slY:val("slY"), slZ:val("slZ"), wmRestoreWep:val("wmRestoreWep"),
     nukeCycle:val("nukeCycle"), nukeDuds:val("nukeDuds"), endDelay:val("endDelay"), classCount:val("classCount"),
