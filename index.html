@@ -109,6 +109,8 @@
   .tab:hover{border-color:var(--line2);color:var(--txt)}
   .tab.on{color:#fff;border-color:var(--accent);background:rgba(139,123,255,.16)}
   .badge{display:inline-block;background:rgba(52,214,200,.12);border:1px solid rgba(52,214,200,.5);color:#9af0e6;border-radius:20px;padding:3px 11px;font:600 11px var(--mono);margin-left:auto}
+  .notice{display:flex;align-items:center;gap:12px;background:rgba(255,180,84,.1);border:1px solid rgba(255,180,84,.55);color:#ffcf8f;border-radius:14px;padding:12px 16px;margin-bottom:16px;font:600 13px var(--sans)}
+  .notice button{flex-shrink:0;margin-left:auto;background:rgba(255,180,84,.18);border:1px solid rgba(255,180,84,.6);color:#ffcf8f}
   .out{position:relative;min-height:0;flex:1;display:flex}
   pre{flex:1;background:#080b10;border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto;margin:0;
     font:12.5px/1.55 var(--mono);color:#cfe0ee;white-space:pre;tab-size:4}
@@ -191,6 +193,11 @@
 <div class="wrap">
   <!-- ───────── LEFT: configuration ───────── -->
   <div class="left">
+
+    <div id="outdatedBanner" class="notice" style="display:none">
+      <span id="outdatedMsg"></span>
+      <button onclick="generate()">Regenerate now</button>
+    </div>
 
     <div class="card">
       <div class="card-h">Config <span class="sub">save per map · share · re-use on updates</span></div>
@@ -306,6 +313,15 @@ eoyrdchf7G2r</textarea>
       <label class="f">Jumpscare fullscreen image</label><input id="scareImg" placeholder="(blank = red flash)">
     </details>
 
+    <details class="card">
+      <summary>Custom code <span class="sub">advanced · your own KrunkScript</span></summary>
+      <p class="q" style="margin:2px 0 10px">Raw KrunkScript appended to the END of each script (top-level). Use double quotes only — NO apostrophes (they break the lexer). Saved with the map. Your code, your risk.</p>
+      <label class="f">Extra CLIENT code <span class="q">(added to the end of client.txt)</span></label>
+      <textarea id="customClientCode" placeholder="# e.g. num MY_VAR = 1;"></textarea>
+      <label class="f">Extra SERVER code <span class="q">(added to the end of server.txt)</span></label>
+      <textarea id="customServerCode" placeholder="# e.g. action myHelper() { ... }"></textarea>
+    </details>
+
   </div>
 
   <!-- ───────── RIGHT: generate + output (sticky) ───────── -->
@@ -373,6 +389,7 @@ function readCfg(){
     wmX:val("wmX"), wmY:val("wmY"), wmZ:val("wmZ"), slX:val("slX"), slY:val("slY"), slZ:val("slZ"), wmRestoreWep:val("wmRestoreWep"),
     nukeCycle:val("nukeCycle"), nukeDuds:val("nukeDuds"), endDelay:val("endDelay"), classCount:val("classCount"),
     nukeSnd:val("nukeSnd"), scareSnd:val("scareSnd"), scareImg:val("scareImg"),
+    customClientCode:val("customClientCode"), customServerCode:val("customServerCode"),
     clientAdminNames:document.getElementById("embedNames").checked,
     mods:readMods()
   };
@@ -381,6 +398,7 @@ function generate(){
   if(KB.locked && KB.locked()){ toast("Unlock first"); return; }
   var cfg=readCfg();
   gen.server=KB.buildServer(cfg); gen.client=KB.buildClient(cfg);
+  hideOutdated();   // regenerating stamps the current version -> no longer outdated
   renderOut();
   // auto-save the config under the map name (silent) so a rebuild after an update is one click
   var nm=(val("mapName")||"").trim();
@@ -467,8 +485,19 @@ function saveLocal(){
 function loadLocal(){
   var name=document.getElementById("savedList").value; if(!name){ return; }   // placeholder picked -> ignore
   var st=parseJSON(localStorage.getItem(LS_PREFIX+name)); if(!st){ toast("Could not read save"); return; }
-  if(importState(st)){ var mn=document.getElementById("mapName"); if(mn) mn.value=(st.map||name); toast('Loaded "'+name+'" — press Generate'); }
+  if(importState(st)){
+    var mn=document.getElementById("mapName"); if(mn) mn.value=(st.map||name);
+    // version check: warn if this map was generated on an older builder (script is stale)
+    var cur=(KB.VERSION||""), was=(st.builder||"");
+    if(was && was!==cur){ showOutdated('Map "'+name+'" was built on v'+was+' — current is v'+cur+'. Regenerate to update the script.'); }
+    else { hideOutdated(); }
+    toast('Loaded "'+name+'" — press Generate');
+  }
 }
+// ── outdated-version warning helpers ──
+function savedBuilder(name){ try{ var st=parseJSON(localStorage.getItem(LS_PREFIX+name)); return (st&&st.builder)||""; }catch(e){ return ""; } }
+function showOutdated(msg){ var m=document.getElementById("outdatedMsg"), b=document.getElementById("outdatedBanner"); if(m) m.textContent=msg; if(b) b.style.display="flex"; }
+function hideOutdated(){ var b=document.getElementById("outdatedBanner"); if(b) b.style.display="none"; }
 function deleteLocal(){
   var name=document.getElementById("savedList").value; if(!name){ toast("Pick a saved config"); return; }
   localStorage.removeItem(LS_PREFIX+name); refreshSavedList(); toast('Deleted "'+name+'"');
@@ -477,8 +506,12 @@ function refreshSavedList(sel){
   var names=[];
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k && k.indexOf(LS_PREFIX)===0) names.push(k.slice(LS_PREFIX.length)); }
   names.sort();
+  var cur=(KB.VERSION||"");
   var s=document.getElementById("savedList");
-  s.innerHTML='<option value="">— saved configs ('+names.length+') —</option>'+names.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("");
+  s.innerHTML='<option value="">— saved configs ('+names.length+') —</option>'+names.map(function(n){
+    var was=savedBuilder(n), old=(was && was!==cur);
+    return '<option value="'+esc(n)+'">'+esc(n)+(old?'  ⚠ outdated':'')+'</option>';
+  }).join("");
   if(sel) s.value=sel;
 }
 
