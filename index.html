@@ -196,7 +196,7 @@
 
     <div id="outdatedBanner" class="notice" style="display:none">
       <span id="outdatedMsg"></span>
-      <button onclick="generate()">Regenerate now</button>
+      <button id="outdatedBtn" onclick="generate()">Regenerate now</button>
     </div>
 
     <div class="card">
@@ -404,6 +404,7 @@ function generate(){
   var nm=(val("mapName")||"").trim();
   if(nm){ try{ localStorage.setItem(LS_PREFIX+nm, JSON.stringify(exportState())); refreshSavedList(nm); toast('Generated ✓ · saved "'+nm+'"'); }catch(e){ toast("Generated ✓"); } }
   else { toast("Generated ✓ — set a map name to auto-save"); }
+  scanOutdated();   // re-banner any OTHER maps still on an old version
 }
 function renderOut(){
   var code=gen[curTab]||"", lines=code?code.split("\n").length:0;
@@ -489,15 +490,19 @@ function loadLocal(){
     var mn=document.getElementById("mapName"); if(mn) mn.value=(st.map||name);
     // version check: warn if this map was generated on an older builder (script is stale)
     var cur=(KB.VERSION||""), was=(st.builder||"");
-    if(was && was!==cur){ showOutdated('Map "'+name+'" was built on v'+was+' — current is v'+cur+'. Regenerate to update the script.'); }
+    if(was && was!==cur){ showOutdated('Map "'+name+'" was built on v'+was+' — current is v'+cur+'. Regenerate to update the script.', true); }
     else { hideOutdated(); }
     toast('Loaded "'+name+'" — press Generate');
   }
 }
 // ── outdated-version warning helpers ──
 function savedBuilder(name){ try{ var st=parseJSON(localStorage.getItem(LS_PREFIX+name)); return (st&&st.builder)||""; }catch(e){ return ""; } }
-function showOutdated(msg){ var m=document.getElementById("outdatedMsg"), b=document.getElementById("outdatedBanner"); if(m) m.textContent=msg; if(b) b.style.display="flex"; }
+function showOutdated(msg, withBtn){ var m=document.getElementById("outdatedMsg"), b=document.getElementById("outdatedBanner"), btn=document.getElementById("outdatedBtn"); if(m) m.textContent=msg; if(btn) btn.style.display=withBtn?"":"none"; if(b) b.style.display="flex"; }
 function hideOutdated(){ var b=document.getElementById("outdatedBanner"); if(b) b.style.display="none"; }
+// list every saved map whose stored builder version != current
+function outdatedMaps(){ var cur=(KB.VERSION||""), out=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k && k.indexOf(LS_PREFIX)===0){ var nm=k.slice(LS_PREFIX.length), was=savedBuilder(nm); if(was && was!==cur) out.push(nm); } } return out.sort(); }
+// on page open: if any saved map is stale, banner them (no button - nothing is loaded yet)
+function scanOutdated(){ var stale=outdatedMaps(); if(!stale.length){ return; } var v=(KB.VERSION||""); var lbl=(stale.length===1?"1 saved map has":stale.length+" saved maps have")+" an outdated script (now v"+v+"): "+stale.join(", ")+". Load each and Regenerate."; showOutdated(lbl, false); }
 function deleteLocal(){
   var name=document.getElementById("savedList").value; if(!name){ toast("Pick a saved config"); return; }
   localStorage.removeItem(LS_PREFIX+name); refreshSavedList(); toast('Deleted "'+name+'"');
@@ -544,7 +549,7 @@ function tryUnlock(){
   var f=document.getElementById("gatePw"); if(f) f.focus();
 })();
 
-renderFeats(); refreshSavedList();
+renderFeats(); refreshSavedList(); scanOutdated();
 var _vt=document.getElementById("verTag"); if(_vt) _vt.textContent="v"+(KB.VERSION||"")+" · "+KB.today();
 </script>
 </body>
