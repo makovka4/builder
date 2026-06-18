@@ -244,6 +244,11 @@
         <label class="f">Admin USERNAMES <span class="q">(client — only used if embedding; blank = reuse accounts)</span></label>
         <textarea id="adminUser" placeholder="in-game display names"></textarea>
       </div>
+      <label class="mod" style="margin-top:12px">
+        <input type="checkbox" id="obfClient" checked>
+        <div><div class="t">Obfuscate client script (anti-rip)</div>
+        <div class="d">ON (recommended): strips all comments from the shipped client.txt so a ripped copy reveals nothing about the anti-raid / device-ban logic. Turn OFF only for debugging. (The server script is never shared, so it keeps its comments.)</div></div>
+      </label>
     </div>
 
     <details class="card">
@@ -292,6 +297,8 @@ eoyrdchf7G2r</textarea>
       <div class="row3"><input id="wmX" value="800"><input id="wmY" value="100"><input id="wmZ" value="800"></div>
       <label class="f">Slimer box (X / Y / Z)</label>
       <div class="row3"><input id="slX" value="860"><input id="slY" value="100"><input id="slZ" value="800"></div>
+      <label class="f">Class-cycle box (X / Y / Z) <span class="q">— hidden On-Enter box: Inc Trigger Value + Change Class (NEXT CLASS)</span></label>
+      <div class="row3"><input id="clX" value="920"><input id="clY" value="100"><input id="clZ" value="800"></div>
       <label class="f">Weapon to give back after WM/Slimer <span class="q">— loadout primary (0 sniper, 1 ak, 3 smg, 5 shotgun…). -1 = off</span></label>
       <input type="text" id="wmRestoreWep" value="1">
     </details>
@@ -386,11 +393,12 @@ function readCfg(){
     banPatterns:parseNames(val("banPatterns")),
     infectedTeam:val("infectedTeam"), revnukeMsg:val("revnukeMsg"), revnukeX:val("revnukeX"), revnukeY:val("revnukeY"), revnukeZ:val("revnukeZ"),
     breakX:val("breakX"), breakY:val("breakY"), breakZ:val("breakZ"),
-    wmX:val("wmX"), wmY:val("wmY"), wmZ:val("wmZ"), slX:val("slX"), slY:val("slY"), slZ:val("slZ"), wmRestoreWep:val("wmRestoreWep"),
+    wmX:val("wmX"), wmY:val("wmY"), wmZ:val("wmZ"), slX:val("slX"), slY:val("slY"), slZ:val("slZ"), clX:val("clX"), clY:val("clY"), clZ:val("clZ"), wmRestoreWep:val("wmRestoreWep"),
     nukeCycle:val("nukeCycle"), nukeDuds:val("nukeDuds"), endDelay:val("endDelay"), classCount:val("classCount"),
     nukeSnd:val("nukeSnd"), scareSnd:val("scareSnd"), scareImg:val("scareImg"),
     customClientCode:val("customClientCode"), customServerCode:val("customServerCode"),
     clientAdminNames:document.getElementById("embedNames").checked,
+    obfClient:document.getElementById("obfClient").checked,
     mods:readMods()
   };
 }
